@@ -6,7 +6,6 @@ import json, datetime
 from bson.json_util import dumps
 from pymongo import MongoClient
 
-
 MONGO_URL=app.config['MONGO_URL']
 
 account = app.config['TWILIO_ACC']
@@ -18,19 +17,6 @@ SECRET_KEY = 'a secret key'
 mongo_client = MongoClient()
 mongo_client = MongoClient(MONGO_URL)
 db = mongo_client.saythat
-
-
-# parties = {
-# 	"A":{
-# 		"number":"+16107169757",
-# 		"name":"Rafic"
-# 		},
-# 	"B":{
-# 		"number":"+14843432432",
-# 		"name":"Jared"
-# 		}
-# 	}
-
 
 @app.route("/create_pair", methods=['POST'])
 def create_pair():
@@ -70,13 +56,13 @@ def chat():
 	"""relays chat message between two parties"""
 	collection = db.pairs
 	from_number = request.values.get('From')
-	broker= request.values.get('To')
+	broker_number= request.values.get('To')
 	body=request.values.get('Body')
 
 	parties=collection.find_one(
 				{"$or":
-					[{"broker":broker,"user.number":from_number},
-					{"broker":broker,"recipient.number":from_number}]})
+					[{"broker.number":broker_number,"user.number":from_number},
+					{"broker.number":broker_number,"recipient.number":from_number}]})
 	if not parties:
 		message="Sorry, I think you have the wrong number"
 		resp = twilio.twiml.Response()
@@ -103,7 +89,7 @@ def chat():
 
 #forwards incoming message to destination 
 	client.messages.create( 
-		from_=broker,
+		from_=broker_number,
 		to=dest['number'],
 		body=body
 		)
