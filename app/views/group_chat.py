@@ -31,6 +31,7 @@ def group_chat():
 				)
 	pending_names=pending_name_queues.find_one({"broker":broker})['members']
 	group_numbers=[x['number'] for x in group['members']]
+
 	if from_number in pending_names:
 		pending_name_queue=pending_name_queues.find_one(
 				{"broker":broker}
@@ -78,15 +79,20 @@ def group_chat():
 		return "New member added: %s" % (from_number)
 
 	else:
+		user=[x for x in group['members'] if x['number']==from_number][0]
 		other_members=[x for x in group['members'] if x['number']!=from_number]
 		for member in other_members:
 			client.messages.create( 
 				from_=broker,
 				to=member['number'],
-				body=body
+				body="%s: %s" % (user['name'],body)
 				)
+		with open('group_chat.txt','a') as f:
+			f.write(user['name']+'\n')
+			f.write(body.encode('utf8')+'\n')
+			f.write('\n')
 		resp={
-			"source":from_number,
+			"source":user,
 			"destination":other_members,
 			"message":body,
 			"status":"success"
