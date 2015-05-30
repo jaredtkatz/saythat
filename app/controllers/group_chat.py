@@ -83,7 +83,7 @@ def group_chat():
 		other_members=[x for x in group['members'] if x['number']!=from_number]
 		for member in other_members:
 			client.messages.create( 
-				from_=broker,
+				from_=broker_number,
 				to=member['number'],
 				body="%s: %s" % (user['name'],body)
 				)
