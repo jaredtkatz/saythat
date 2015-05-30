@@ -24,17 +24,17 @@ def group_chat():
 	groups = db.groups
 	pending_name_queues=db.pending_name_queues
 	from_number = request.values.get('From')
-	broker= request.values.get('To')
+	broker_number= request.values.get('To')
 	body=request.values.get('Body')
 	group=groups.find_one(
-				{"broker":broker}
+				{"broker.number":broker_number}
 				)
-	pending_names=pending_name_queues.find_one({"broker":broker})['members']
+	pending_names=pending_name_queues.find_one({"broker":broker_number})['members']
 	group_numbers=[x['number'] for x in group['members']]
 
 	if from_number in pending_names:
 		pending_name_queue=pending_name_queues.find_one(
-				{"broker":broker}
+				{"broker":broker_number}
 				)
 		#remove the user from pending_name_queue
 		pending_name_queue['members']=[x for x in pending_name_queue['members'] if x!=from_number]
@@ -52,7 +52,7 @@ def group_chat():
 				group)
 		#tell the user they are now part of the group
 		client.messages.create( 
-					from_=broker,
+					from_=broker_number,
 					to=from_number,
 					body="Whatup, %s. Now you're free to message the group." % body.strip()
 					)
@@ -65,14 +65,14 @@ def group_chat():
 	elif from_number not in group_numbers:
 		#update group members
 		pending_name_queue=pending_name_queues.find_one(
-				{"broker":broker}
+				{"broker":broker_number}
 				)
 		pending_name_queue['members'].append(from_number)
 		pending_name_queues.update(
 				{"_id":pending_name_queue['_id']},
 				pending_name_queue)
 		client.messages.create( 
-					from_=broker,
+					from_=broker_number,
 					to=from_number,
 					body="Welcome to the group, dawg! What's your name?"
 					)
